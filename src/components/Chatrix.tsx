@@ -16,7 +16,7 @@ export const Chatrix = () => {
     getMessages, 
     sendMessage, 
     setMessages 
-  } = useChat('ws://localhost:8080/ws');
+  } = useChat(`${import.meta.env.VITE_BACKEND_URL}/ws`);
   const {user, token} = useAuth();
   const [textingToId, setTextingToId] = useState<string | null>(null);
   const [inputData, setInputData] = useState('');

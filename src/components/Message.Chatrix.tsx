@@ -30,3 +30,44 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
     </div>
   );
 };
+
+export const MessageSkeleton = () => {
+  return (
+    <div className="flex flex-col gap-6 animate-pulse w-full">
+      {/* Received Message - Medium */}
+      <div className="flex justify-start">
+        <div className="flex flex-col items-start w-full">
+          <div className="h-10 bg-gray-800 rounded-2xl rounded-bl-sm w-[65%]" />
+        </div>
+      </div>
+
+      {/* Sent Message - Short & Sharp */}
+      <div className="flex justify-end">
+        <div className="flex flex-col items-end w-full">
+          <div className="h-10 bg-gray-700 rounded-2xl rounded-br-sm w-[30%]" />
+        </div>
+      </div>
+
+      {/* Received Message - Long/Multilined */}
+      <div className="flex justify-start">
+        <div className="flex flex-col items-start w-full">
+          <div className="h-16 bg-gray-800 rounded-2xl rounded-bl-sm w-[80%]" />
+        </div>
+      </div>
+
+      {/* Sent Message - Medium */}
+      <div className="flex justify-end">
+        <div className="flex flex-col items-end w-full">
+          <div className="h-10 bg-gray-700 rounded-2xl rounded-br-sm w-[50%]" />
+        </div>
+      </div>
+      
+      {/* Received Message - Tiny */}
+      <div className="flex justify-start">
+        <div className="flex flex-col items-start w-full">
+          <div className="h-10 bg-gray-800 rounded-2xl rounded-bl-sm w-[20%]" />
+        </div>
+      </div>
+    </div>
+  );
+};

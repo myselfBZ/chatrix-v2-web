@@ -20,12 +20,14 @@ export const Chatrix = () => {
   const {user, token} = useAuth();
   const [textingToId, setTextingToId] = useState<string | null>(null);
   const [inputData, setInputData] = useState('');
+
+  const [msgHistoryLoading, setMsgHistoryLoading] = useState<boolean>(true)
   
   const textingTo = conversations.find(c => c.user_data.id === textingToId) || null;
   
   useEffect(() => {
     if(!textingToId || !token || !user) return;
-
+    setMsgHistoryLoading(true)
     const fetchChatHistory = async () => {
       const resp = await getMessageHistory({
         token: token,
@@ -41,6 +43,7 @@ export const Chatrix = () => {
       setMessages(prev => ({
         ...prev, [textingToId]: history
       }))
+      setMsgHistoryLoading(false)
     }
 
     fetchChatHistory()
@@ -76,6 +79,7 @@ export const Chatrix = () => {
           textingTo ? (
           <div className="flex-1 flex flex-col">
             <MessagesArea 
+              loadingHistory={msgHistoryLoading}
               messages={getMessages( (textingToId) ? ( textingTo.user_data.id) : ( "" ))} 
               selectedUser={textingTo}
             />

@@ -1,14 +1,17 @@
 import type { ConversationWithUser } from "../api/api";
-import { Message } from "./Message.Chatrix";
+import { Message, MessageSkeleton } from "./Message.Chatrix";
 import { useEffect, useRef } from "react";
 import type { TextMessage } from "./UseChat";
+
 
 export const MessagesArea = ({ 
   messages, 
   selectedUser, 
+  loadingHistory
 }: { 
   messages: TextMessage[]; 
   selectedUser: ConversationWithUser | null;
+  loadingHistory: boolean
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
  const formatDate = (dateString: string) => {
@@ -85,24 +88,28 @@ export const MessagesArea = ({
       </div>
       
       {/* 1. This is the scrollable viewport */}
-      <div className="flex-1 overflow-y-auto min-h-0 px-6">
-        {/* 2. This container forces content to the bottom using justify-end */}
-        <div className="flex flex-col justify-end min-h-full py-6">
-          {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">No messages yet. Start a conversation!</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {messages.map((msg, i) => (
-                <Message key={i} message={msg} isNew={i === messages.length - 1} />
-              ))}
-              {/* 3. Invisible anchor for scrolling */}
-              <div ref={messagesEndRef} className="h-px" />
-            </div>
-          )}
+        <div className="flex-1 overflow-y-auto min-h-0 px-6">
+          <div className="flex flex-col justify-end min-h-full py-6">
+            
+            {loadingHistory ? (
+              /* SHOW SKELETONS */
+              <MessageSkeleton />
+            ) : messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">No messages yet. Start a conversation!</p>
+              </div>
+            ) : (
+              /* SHOW REAL MESSAGES */
+              <div className="flex flex-col gap-2">
+                {messages.map((msg, i) => (
+                  <Message key={i} message={msg} isNew={i === messages.length - 1} />
+                ))}
+                <div ref={messagesEndRef} className="h-px" />
+              </div>
+            )}
+            
+          </div>
         </div>
-      </div>
     </div>
   );
 };

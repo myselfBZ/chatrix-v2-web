@@ -5,9 +5,27 @@ import { getConversations, type ConversationWithUser } from '../api/api';
 
 type MessageStore = Record<string, TextMessage[]>;
 
+/*type ChatMsg struct {
+	// User ids
+	To   string `json:"to"`
+	From string `json:"from"`
+
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	TempID    string    `json:"temp_id"`
+	ID        uuid.UUID    `json:"id"`
+}*/
+
+
+
 export type TextMessage = {
   content: string;
-  outgoing: boolean
+  outgoing: boolean;
+  created_at:         string;
+  id:                 string;
+  is_read:            boolean;
+  temp_id:            string;
+  state?:             "pending" | "delivered" | "read"
 }
 
 
@@ -58,11 +76,16 @@ export const useChat = (url: string) => {
 
     chatService.onMessage((data) => {
       switch (data.type) {
-        // we ain't gonna need this either
         case "CHAT":
           addMessageToStore(data.message.from, {
             outgoing: false,
-            content: data.message.content
+            content: data.message.content,
+            created_at: data.message.created_at,
+            id: data.message.id,
+            // no uuids for incoming messages
+            temp_id: "",
+            // later okay?
+            is_read: false,
           })
           break;
         case "ONLINE_PRESENCE":
@@ -114,6 +137,31 @@ export const useChat = (url: string) => {
           }
           // TODO
           console.log("error", data.message.reason);
+          break;
+        case "ACK_MSG_DELIVERED":
+          setMessages((prev) => {
+            const msgs = prev[data.message.reciever_id] || []
+
+            
+            const updated = msgs.map((m) => {
+              if(m.outgoing && m.temp_id && m.temp_id === data.message.temp_id) {
+                m.state = "delivered"
+                return {
+                  ...m,
+                  created_at: data.message.created_at,
+                  id: data.message.id
+                }
+              }
+              return m
+            })
+
+            
+            return {
+              ...prev,
+              [data.message.reciever_id]: updated
+            }
+          })
+         
       }
     });
     
@@ -124,10 +172,23 @@ export const useChat = (url: string) => {
   }, [url]);
 
   const sendMessage = useCallback((to: string, from: string, content: string) => {
-    chatService.send("CHAT", { to, from, content });
+    const temp_id = crypto.randomUUID()
+    
+    chatService.send("CHAT", { 
+      to, 
+      from, 
+      content,
+      temp_id
+    });
     addOutGoingMessage(to , {
       outgoing: true,
-      content: content
+      content: content,
+      temp_id: temp_id,
+      // server's part
+      id: "",
+      is_read: false,
+      created_at: "",
+      state: "pending"
     })
   }, []);
 

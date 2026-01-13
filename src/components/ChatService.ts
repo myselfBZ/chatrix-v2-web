@@ -1,11 +1,23 @@
 
 
 export type MessageTypes = { type: "SET_NAME"; message: { name: string; clients: string[] } }
-  | { type: "CHAT"; message : { from: string; content: string, to: string } }
+  | { type: "CHAT"; message : { 
+      from: string; 
+      content: string, 
+      to: string;
+      id: string;
+      created_at: string;
+  } }
   | { type: "ONLINE_PRESENCE", message : {user_id : string} }
   | { type: "OFFLINE_STATUS", message : {user_id : string; last_seen: string;} }
   | {type: "WELCOME", message: {}}
   | { type: "ERR", message: { reason: string; code: number; } }
+  | { type: "ACK_MSG_DELIVERED", message : {
+      reciever_id: string;
+      temp_id: string;
+      created_at: string;
+      id: string;
+  } }
 
 
 export type MessageCallback = (data: MessageTypes) => void;

@@ -28,15 +28,21 @@ export const Chatrix = () => {
   useEffect(() => {
     if(!textingToId || !token || !user) return;
     setMsgHistoryLoading(true)
+    
     const fetchChatHistory = async () => {
       const resp = await getMessageHistory({
         token: token,
         with_id: textingToId
       })
-      const history : TextMessage[] = resp.data.map((msg) => {
+      const history : TextMessage[] = resp.data?.map((msg) => {
         return {
           outgoing: msg.sender_id == user.id,
-          content: msg.content
+          content: msg.content,
+          created_at: msg.created_at,
+          id: msg.id,
+          is_read: false,
+          state: "delivered",
+          temp_id: "",
         }
       })
 

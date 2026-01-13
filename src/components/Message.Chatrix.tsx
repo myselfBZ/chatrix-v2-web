@@ -1,29 +1,51 @@
+import { useEffect, useRef } from "react";
 import type { TextMessage } from "./UseChat";
+import { formatMessageTime, AnimatedClock, CheckIcon, playTickSound } from "./MessageUtilts";
+
+
 
 export const Message = ({ message, isNew }: { message: TextMessage; isNew?: boolean }) => {
-  const isOutgoing = message.outgoing
-  /*const isSystem = message.startsWith('✓') || message.startsWith('✗');
-  
-  if (isSystem) {
-    return (
-      <div className="flex justify-center my-2 animate-fadeIn shrink-0">
-        <span className="text-xs text-gray-500 bg-gray-800 px-3 py-1 rounded-full text-center">
-          {message}
-        </span>
-      </div>
-    );
-  }*/
-  
+  const isOutgoing = message.outgoing;
+  const isPending = message.state === 'pending';
+  const isDelivered = message.state === 'delivered';
+  const prevStateRef = useRef(message.state);
+
+  useEffect(() => {
+    // Play sound when state changes from pending to delivered
+    if (prevStateRef.current === 'pending' && message.state === 'delivered') {
+      playTickSound();
+    }
+    prevStateRef.current = message.state;
+  }, [message.state]);
+
   return (
-    <div className={`flex w-full ${isOutgoing ? 'justify-end' : 'justify-start'} mb-4 ${isNew ? 'animate-slideUp' : 'animate-fadeIn'}`}>
-      <div className={`max-w-[80%] sm:max-w-[70%] flex flex-col ${isOutgoing ? 'items-end' : 'items-start'}`}>
-        <div className={`rounded-2xl px-4 py-2 shadow-sm ${
+    <div className={`flex w-full ${isOutgoing ? 'justify-end' : 'justify-start'} mb-2 ${isNew ? 'animate-slideUp' : 'animate-fadeIn'}`}>
+      <div className={`max-w-[35ch] flex flex-col ${isOutgoing ? 'items-end' : 'items-start'}`}>
+        
+        {/* Message Bubble Container */}
+        <div className={`relative rounded-2xl px-3 py-1.5 shadow-sm ${
           isOutgoing 
             ? 'bg-blue-600 text-white rounded-br-sm' 
             : 'bg-gray-800 text-gray-100 rounded-bl-sm'
         }`}>
-          <p className="text-sm leading-relaxed text-left break-words whitespace-pre-wrap">
+          
+          {/* Content with inline timestamp */}
+          <p className="text-[15px] leading-relaxed text-left break-words whitespace-pre-wrap inline">
             {message.content}
+            <span className={`text-[10px] ml-2 select-none inline-block align-bottom ${
+              isOutgoing ? 'text-blue-100/80' : 'text-gray-400'
+            }`}>
+              {isPending ? (
+                <AnimatedClock className={isOutgoing ? 'text-blue-100/80' : 'text-gray-400'} />
+              ) : (
+                <>
+                  {formatMessageTime(message.created_at)}
+                  {isDelivered && (
+                    <CheckIcon className={`ml-1 ${isOutgoing ? 'text-blue-100/80' : 'text-gray-400'}`} />
+                  )}
+                </>
+              )}
+            </span>
           </p>
         </div>
       </div>

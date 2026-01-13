@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { TextMessage } from "./UseChat";
-import { formatMessageTime, AnimatedClock, CheckIcon, playTickSound } from "./MessageUtilts";
+import { formatMessageTime, AnimatedClock, CheckIcon, playTickSound, playIncomingSound } from "./MessageUtilts";
 
 
 
@@ -9,14 +9,23 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
   const isPending = message.state === 'pending';
   const isDelivered = message.state === 'delivered';
   const prevStateRef = useRef(message.state);
+  const hasPlayedIncomingSound = useRef(false);
 
+  // Play sound when message is delivered
   useEffect(() => {
-    // Play sound when state changes from pending to delivered
     if (prevStateRef.current === 'pending' && message.state === 'delivered') {
       playTickSound();
     }
     prevStateRef.current = message.state;
   }, [message.state]);
+
+  // Play sound for new incoming messages
+  useEffect(() => {
+    if (isNew && !isOutgoing && !hasPlayedIncomingSound.current) {
+      playIncomingSound();
+      hasPlayedIncomingSound.current = true;
+    }
+  }, [isNew, isOutgoing]);
 
   return (
     <div className={`flex w-full ${isOutgoing ? 'justify-end' : 'justify-start'} mb-2 ${isNew ? 'animate-slideUp' : 'animate-fadeIn'}`}>
@@ -40,7 +49,7 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
               ) : (
                 <>
                   {formatMessageTime(message.created_at)}
-                  {isDelivered && (
+                  {isDelivered && isOutgoing && (
                     <CheckIcon className={`ml-1 ${isOutgoing ? 'text-blue-100/80' : 'text-gray-400'}`} />
                   )}
                 </>

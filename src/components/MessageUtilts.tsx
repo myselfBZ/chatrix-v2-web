@@ -4,7 +4,32 @@ export const formatMessageTime = (dateString: string) => {
          d.getMinutes().toString().padStart(2, '0');
 };
 
-// Create a simple tick sound using Web Audio API
+export const playIncomingSound = () => {
+  const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+  
+  // Create two oscillators for a pleasant "ding" sound
+  const osc1 = audioContext.createOscillator();
+  const osc2 = audioContext.createOscillator();
+  const gainNode = audioContext.createGain();
+  
+  osc1.connect(gainNode);
+  osc2.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+  
+  // Two-tone notification sound
+  osc1.frequency.setValueAtTime(800, audioContext.currentTime);
+  osc2.frequency.setValueAtTime(1000, audioContext.currentTime);
+  
+  // Fade out
+  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+  
+  osc1.start(audioContext.currentTime);
+  osc2.start(audioContext.currentTime);
+  osc1.stop(audioContext.currentTime + 0.3);
+  osc2.stop(audioContext.currentTime + 0.3);
+};
+
 export const playTickSound = () => {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
   

@@ -82,6 +82,25 @@ export const AnimatedClock = ({ className }: { className?: string }) => (
   </svg>
 );
 
+export const DoubleCheckIcon = ({ className }: { className?: string }) => (
+  <svg
+    className={`inline-block animate-scaleIn ${className}`}
+    width="18"
+    height="14"
+    viewBox="0 0 28 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {/* First check (back) */}
+    <polyline points="6 12 10 16 18 8" />
+    {/* Second check (front, offset to the right) */}
+    <polyline points="12 12 16 16 24 8" />
+  </svg>
+);
+
 export const CheckIcon = ({ className }: { className?: string }) => (
   <svg
     className={`inline-block animate-scaleIn ${className}`}

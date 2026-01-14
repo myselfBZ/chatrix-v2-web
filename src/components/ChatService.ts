@@ -18,6 +18,7 @@ export type MessageTypes = { type: "SET_NAME"; message: { name: string; clients:
       created_at: string;
       id: string;
   } }
+  | { type: "MSG_READ", message: { conversation_id: string, message_ids: string[] } }
 
 
 export type MessageCallback = (data: MessageTypes) => void;

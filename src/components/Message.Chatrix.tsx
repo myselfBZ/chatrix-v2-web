@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { TextMessage } from "./UseChat";
-import { formatMessageTime, AnimatedClock, CheckIcon, playTickSound, playIncomingSound } from "./MessageUtilts";
+import { formatMessageTime, AnimatedClock, CheckIcon, DoubleCheckIcon ,playTickSound, playIncomingSound } from "./MessageUtilts";
 
 
 
@@ -8,6 +8,7 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
   const isOutgoing = message.outgoing;
   const isPending = message.state === 'pending';
   const isDelivered = message.state === 'delivered';
+  const isRead  = message.state == 'read';
   const prevStateRef = useRef(message.state);
   const hasPlayedIncomingSound = useRef(false);
 
@@ -39,7 +40,7 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
         }`}>
           
           {/* Content with inline timestamp */}
-          <p className="text-[15px] leading-relaxed text-left break-words whitespace-pre-wrap inline">
+         <p className="text-[15px] leading-relaxed text-left break-words whitespace-pre-wrap inline">
             {message.content}
             <span className={`text-[10px] ml-2 select-none inline-block align-bottom ${
               isOutgoing ? 'text-blue-100/80' : 'text-gray-400'
@@ -49,9 +50,11 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
               ) : (
                 <>
                   {formatMessageTime(message.created_at)}
-                  {isDelivered && isOutgoing && (
+                  {isRead && isOutgoing ?  (
+                    <DoubleCheckIcon className={`ml-1 ${isOutgoing ? 'text-blue-200' : 'text-gray-400'}`} />
+                  ) : isDelivered && isOutgoing ? (
                     <CheckIcon className={`ml-1 ${isOutgoing ? 'text-blue-100/80' : 'text-gray-400'}`} />
-                  )}
+                  ) : null}
                 </>
               )}
             </span>
@@ -65,35 +68,31 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
 export const MessageSkeleton = () => {
   return (
     <div className="flex flex-col gap-6 animate-pulse w-full">
-      {/* Received Message - Medium */}
+
       <div className="flex justify-start">
         <div className="flex flex-col items-start w-full">
           <div className="h-10 bg-gray-800 rounded-2xl rounded-bl-sm w-[65%]" />
         </div>
       </div>
 
-      {/* Sent Message - Short & Sharp */}
       <div className="flex justify-end">
         <div className="flex flex-col items-end w-full">
           <div className="h-10 bg-gray-700 rounded-2xl rounded-br-sm w-[30%]" />
         </div>
       </div>
 
-      {/* Received Message - Long/Multilined */}
       <div className="flex justify-start">
         <div className="flex flex-col items-start w-full">
           <div className="h-16 bg-gray-800 rounded-2xl rounded-bl-sm w-[80%]" />
         </div>
       </div>
 
-      {/* Sent Message - Medium */}
       <div className="flex justify-end">
         <div className="flex flex-col items-end w-full">
           <div className="h-10 bg-gray-700 rounded-2xl rounded-br-sm w-[50%]" />
         </div>
       </div>
       
-      {/* Received Message - Tiny */}
       <div className="flex justify-start">
         <div className="flex flex-col items-start w-full">
           <div className="h-10 bg-gray-800 rounded-2xl rounded-bl-sm w-[20%]" />

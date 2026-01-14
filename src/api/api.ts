@@ -14,6 +14,7 @@ export type ConversationWithUser = {
         id : string;
         last_seen: string;
         username: string;
+        conversation_id: string
     };
     is_online: boolean;
 }

@@ -1,22 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { chatService } from './ChatService';
 import { useAuth } from './Auth/AuthContex';
 import { getConversations, type ConversationWithUser } from '../api/api';
 
 type MessageStore = Record<string, TextMessage[]>;
-
-/*type ChatMsg struct {
-	// User ids
-	To   string `json:"to"`
-	From string `json:"from"`
-
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-	TempID    string    `json:"temp_id"`
-	ID        uuid.UUID    `json:"id"`
-}*/
-
-
 
 export type TextMessage = {
   content: string;
@@ -34,7 +21,9 @@ export const useChat = (url: string) => {
   const [connected, setConnected] = useState(false);
   const [myName, setMyName] = useState("");
   const [conversations, setConversations] = useState<ConversationWithUser[]>([]);
+  const conversationsRef = useRef<ConversationWithUser[]>([])
   const [messages, setMessages] = useState<MessageStore>({});
+
 
   const getMessages = (contact: string) => {
     const contactMessages = messages[contact]
@@ -55,6 +44,10 @@ export const useChat = (url: string) => {
       [contactId]: [...(prev[contactId] || []), text],
     }));
   };
+
+  useEffect(() => {
+    conversationsRef.current = conversations
+  }, [conversations])
 
   useEffect(() => {
     const loadConversations = async () => {
@@ -161,7 +154,33 @@ export const useChat = (url: string) => {
               [data.message.reciever_id]: updated
             }
           })
-         
+          break;
+        case "MSG_READ":
+          setMessages((prev) => {
+    // Look at the REF, not the state variable
+    const currentConvos = conversationsRef.current;
+    
+    const partner = currentConvos.find(
+      c => c.user_data.conversation_id === data.message.conversation_id
+    );
+    
+    const partnerId = partner?.user_data.id;
+
+    if (!partnerId) {
+      console.error("Could not find partner for convo:", data.message.conversation_id);
+      return prev;
+    }
+
+    // Now update your messages state as usual...
+    const idSet = new Set(data.message.message_ids);
+    return {
+      ...prev,
+      [partnerId]: (prev[partnerId] || []).map(m => 
+        idSet.has(m.id) ? { ...m, is_read: true, state: "read" } : m
+      )
+    };
+  });
+  break;
       }
     });
     
@@ -192,6 +211,13 @@ export const useChat = (url: string) => {
     })
   }, []);
 
+  const sendMarkReadEvent = (conversation_id: string, msg_owner_id : string) => {
+    chatService.send("MARK_READ", {
+        conversation_id,
+        msg_owner_id,
+    })
+  }
+
   return { 
     connected, 
     myName, 
@@ -199,6 +225,7 @@ export const useChat = (url: string) => {
     getMessages,
     sendMessage,
     setMessages,
-    addOutGoingMessage
+    addOutGoingMessage,
+    sendMarkReadEvent
     };
 };

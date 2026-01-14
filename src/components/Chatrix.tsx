@@ -15,7 +15,8 @@ export const Chatrix = () => {
     conversations, 
     getMessages, 
     sendMessage, 
-    setMessages 
+    setMessages,
+    sendMarkReadEvent 
   } = useChat(`${import.meta.env.VITE_BACKEND_URL}/ws`);
   const {user, token} = useAuth();
   const [textingToId, setTextingToId] = useState<string | null>(null);
@@ -40,8 +41,8 @@ export const Chatrix = () => {
           content: msg.content,
           created_at: msg.created_at,
           id: msg.id,
-          is_read: false,
-          state: "delivered",
+          is_read: msg.is_read,
+          state: msg.is_read ? ( "read") : ("delivered"),
           temp_id: "",
         }
       })
@@ -55,6 +56,29 @@ export const Chatrix = () => {
     fetchChatHistory()
 
   }, [textingToId])
+
+  useEffect(() => {
+    // 1. Only run if we have an active chat and are connected
+    if (!textingTo || !textingToId || !connected) return;
+
+    const currentMessages = getMessages(textingToId);
+    
+    // 2. Check if there are any UNREAD messages that were SENT BY THE OTHER PERSON
+    const hasUnread = currentMessages.some(m => !m.is_read && !m.outgoing);
+
+    if (hasUnread) {
+      // 3. Tell the Server
+      sendMarkReadEvent(textingTo.user_data.conversation_id, textingToId);
+
+      // 4. Optimistically update local UI so the "Unread" UI goes away instantly
+      setMessages(prev => ({
+        ...prev,
+        [textingToId]: prev[textingToId].map(m => 
+          !m.outgoing ? { ...m, is_read: true } : m
+        )
+      }));
+    }
+  }, [textingToId, getMessages(textingToId ? (textingToId) : ("")).length, connected]); 
   
   const handleSend = () => {
     if (inputData.trim() && textingTo && user && textingToId) {

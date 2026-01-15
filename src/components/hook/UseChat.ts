@@ -159,30 +159,31 @@ export const useChat = (url: string) => {
           break;
         case "MSG_READ":
           setMessages((prev) => {
-    // Look at the REF, not the state variable
-    const currentConvos = conversationsRef.current;
+          const currentConvos = conversationsRef.current;
     
-    const partner = currentConvos.find(
-      c => c.user_data.conversation_id === data.message.conversation_id
-    );
+          const partner = currentConvos.find(
+            c => c.user_data.conversation_id === data.message.conversation_id
+          );
     
-    const partnerId = partner?.user_data.id;
+          const partnerId = partner?.user_data.id;
 
-    if (!partnerId) {
-      console.error("Could not find partner for convo:", data.message.conversation_id);
-      return prev;
-    }
+          if (!partnerId) {
+            console.error("Could not find partner for convo:", data.message.conversation_id);
+            return prev;
+          }
 
-    // Now update your messages state as usual...
-    const idSet = new Set(data.message.message_ids);
-    return {
-      ...prev,
-      [partnerId]: (prev[partnerId] || []).map(m => 
-        idSet.has(m.id) ? { ...m, is_read: true, state: "read" } : m
-      )
-    };
-  });
-  break;
+          // Now update your messages state as usual...
+          const idSet = new Set(data.message.message_ids);
+          return {
+            ...prev,
+            [partnerId]: (prev[partnerId] || []).map(m => 
+              idSet.has(m.id) ? { ...m, is_read: true, state: "read" } : m
+            )
+          };
+        });
+        break;
+      case "CONVO_CREATED":
+        setConversations(prev => [...prev, data.message])
       }
     });
     
@@ -229,6 +230,7 @@ export const useChat = (url: string) => {
     setMessages,
     addOutGoingMessage,
     sendMarkReadEvent,
-    conversationLoading
+    conversationLoading,
+    setConversations
     };
 };

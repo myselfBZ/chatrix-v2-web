@@ -1,3 +1,5 @@
+import type { ConversationWithUser } from "../api/api";
+
 export type MessageTypes = { type: "SET_NAME"; message: { name: string; clients: string[] } }
   | { type: "CHAT"; message : { 
       from: string; 
@@ -17,6 +19,7 @@ export type MessageTypes = { type: "SET_NAME"; message: { name: string; clients:
       id: string;
   } }
   | { type: "MSG_READ", message: { conversation_id: string, message_ids: string[] } }
+  | { type: "CONVO_CREATED", message: ConversationWithUser }
 
 
 export type MessageCallback = (data: MessageTypes) => void;

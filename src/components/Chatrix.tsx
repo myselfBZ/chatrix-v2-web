@@ -5,7 +5,7 @@ import { Sidebar } from "./SideBar.Chatrix";
 import { MessagesArea } from "./MessageArea.Chatrix";
 import { InputArea } from "./InputArea.Chatrix";
 import { useAuth } from "./Auth/AuthContex";
-import { getMessageHistory } from "../api/api";
+import { createConversation, getMessageHistory, type ConversationWithUser } from "../api/api";
 
 
 export const Chatrix = () => {
@@ -17,24 +17,23 @@ export const Chatrix = () => {
     sendMessage, 
     setMessages,
     sendMarkReadEvent,
-    conversationLoading
+    conversationLoading,
+    setConversations
   } = useChat(`${import.meta.env.VITE_BACKEND_URL}/ws`);
   const {user, token} = useAuth();
-  const [textingToId, setTextingToId] = useState<string | null>(null);
+  const [textingTo, setTextingTo] = useState<ConversationWithUser | null>(null);
   const [inputData, setInputData] = useState('');
   const [msgHistoryLoading, setMsgHistoryLoading] = useState<boolean>(true)
-
-
-  const textingTo = conversations.find(c => c.user_data.id === textingToId) || null;
+  const textingToId = textingTo?.user_data.id
   useEffect(() => {
-    if(!textingToId || !token || !user) return;
+    if(!textingTo || !token || !user) return;
     setMsgHistoryLoading(true)
     
     const fetchChatHistory = async () => {
       try {
         const resp = await getMessageHistory({
           token: token,
-          with_id: textingToId
+          with_id: textingTo.user_data.id
         })
         const history : TextMessage[] = resp.data?.map((msg) => {
           return {
@@ -49,7 +48,7 @@ export const Chatrix = () => {
         })
   
         setMessages(prev => ({
-          ...prev, [textingToId]: history
+          ...prev, [textingTo.user_data.id]: history
         }))
       } catch(e: any) {        
         // 1. Check if it's a 404 (No history yet)
@@ -58,7 +57,7 @@ export const Chatrix = () => {
 
         if (status === 404) {
           console.log("New conversation! Setting empty array.");          
-          setMessages(prev => ({ ...prev, [textingToId]: [] }));
+          setMessages(prev => ({ ...prev, [textingTo.user_data.id]: [] }));
         } else {
           // 2. It's a real error (500, Network Down, etc.)
           // Maybe show a toast or a small error message in the chat area
@@ -71,7 +70,7 @@ export const Chatrix = () => {
 
     fetchChatHistory()
 
-  }, [textingToId])
+  }, [textingTo])
 
   useEffect(() => {
     // 1. Only run if we have an active chat and are connected
@@ -94,10 +93,34 @@ export const Chatrix = () => {
         )
       }));
     }
-  }, [textingToId, getMessages(textingToId ? (textingToId) : ("")).length, connected]); 
+  }, [textingTo, getMessages(textingToId ? (textingToId) : ("")).length, connected]); 
   
-  const handleSend = () => {
-    if (inputData.trim() && textingTo && user && textingToId) {
+
+  useEffect(() => {
+    if (!textingTo) return;
+
+    const updated = conversations.find(
+      c => c.user_data.id === textingTo.user_data.id
+    );
+
+    if (updated && updated !== textingTo) {
+      setTextingTo(updated);
+    }
+  } , [conversations]);
+
+  const handleSend = async () => {
+    if (inputData.trim() && textingTo && user && textingToId && token) {
+      if(!textingTo.user_data.conversation_id) {
+        const resp = await createConversation({
+          token: token,
+          user1: user.id,
+          user2: textingToId
+        })
+        setConversations(prev => [...prev, {
+          user_data: {...textingTo.user_data, conversation_id: resp.data.id},
+          is_online: textingTo.is_online
+        }])
+      }
       sendMessage(textingToId, user.id, inputData);
       setInputData('');
     }
@@ -105,7 +128,7 @@ export const Chatrix = () => {
 
   const handleEscape = (event: React.KeyboardEvent) => {
     if (event.key == 'Escape' && textingTo) {
-      setTextingToId(null)
+      setTextingTo(null)
     }
   }
 
@@ -120,7 +143,7 @@ export const Chatrix = () => {
           conversationLoading={conversationLoading}
           conversations={conversations} 
           selectedUser={textingTo}
-          onSelectUser={setTextingToId}
+          onSelectUser={setTextingTo}
         />
         {
           textingTo ? (

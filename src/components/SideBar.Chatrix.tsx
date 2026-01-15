@@ -15,7 +15,7 @@ export const Sidebar = ({
 }: { 
   conversations: ConversationWithUser[]; 
   selectedUser: ConversationWithUser | null; 
-  onSelectUser: (id: string) => void;
+  onSelectUser: (user: ConversationWithUser) => void;
   conversationLoading: boolean;
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -77,16 +77,21 @@ export const Sidebar = ({
           ) : isSearchMode ? (
             searchResults.map((user) => (
               <UserListItem
+                lastSeen={user.last_seen}
+                conversationId=""
                 key={user.id}
                 id={user.id}
                 username={user.username}
                 onClick={onSelectUser}
+                isOnline={user.is_online}
                 variant="search"
               />
             ))
           ) : (
             filteredConversations.map((user) => (
               <UserListItem
+                lastSeen={user.user_data.last_seen}
+                conversationId={user.user_data.conversation_id}
                 key={user.user_data.id}
                 id={user.user_data.id}
                 username={user.user_data.username}

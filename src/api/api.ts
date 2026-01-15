@@ -9,10 +9,17 @@ export type Message = {
     conversation_id:    string;
 }
 
+export type CreateConversationResponse = {
+    user1: string;
+    user2 : string;
+    id: string;
+}
+
 export type SearchUserResult = {
     username: string;
     id: string;
-    last_seen: string
+    last_seen: string;
+    is_online: boolean;
 }
 
 export type ConversationWithUser = {
@@ -56,6 +63,18 @@ export const searchUser = ({ token, query } : {
         headers: {
             'Authorization': `Bearer ${token}`
         },
+    })
+}
+
+export const createConversation = ({ token, user1, user2 } : {
+    token: string;
+    user1: string;
+    user2: string;
+}) => {
+    return serverApiInstance.post('/authenticated/conversations', { user1, user2 }, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
     })
 }
 

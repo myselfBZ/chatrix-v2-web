@@ -1,10 +1,14 @@
+import type { ConversationWithUser } from "../api/api";
+
 interface UserListItemProps {
   id: string;
   username: string;
   isOnline?: boolean;
   isSelected?: boolean;
+  lastSeen: string;
   variant?: 'conversation' | 'search';
-  onClick: (id: string) => void;
+  onClick: (user: ConversationWithUser) => void;
+  conversationId: string;
 }
 
 export const UserListItem = ({
@@ -13,7 +17,9 @@ export const UserListItem = ({
   isOnline,
   isSelected = false,
   variant = 'conversation',
-  onClick
+  onClick,
+  lastSeen,
+  conversationId,
 }: UserListItemProps) => {
   const gradientColors = variant === 'conversation' 
     ? 'from-green-400 to-blue-500' 
@@ -21,7 +27,15 @@ export const UserListItem = ({
 
   return (
     <button
-      onClick={() => onClick(id)}
+      onClick={() => onClick({
+        user_data: {
+          username: username,
+          id: id,
+          last_seen: lastSeen,
+          conversation_id: conversationId,
+        },
+        is_online: isOnline ? (isOnline) : (false)
+      })}
       className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-700 transition-colors cursor-pointer ${
         isSelected ? 'bg-gray-700 border-l-4 border-blue-500' : ''
       }`}

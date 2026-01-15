@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { chatService } from './ChatService';
-import { useAuth } from './Auth/AuthContex';
-import { getConversations, type ConversationWithUser } from '../api/api';
+import { chatService } from '../ChatService';
+import { useAuth } from '../Auth/AuthContex';
+import { getConversations, type ConversationWithUser } from '../../api/api';
 
 type MessageStore = Record<string, TextMessage[]>;
 
@@ -23,7 +23,7 @@ export const useChat = (url: string) => {
   const [conversations, setConversations] = useState<ConversationWithUser[]>([]);
   const conversationsRef = useRef<ConversationWithUser[]>([])
   const [messages, setMessages] = useState<MessageStore>({});
-
+  const [conversationLoading, setConversationLoading] = useState<boolean>(true)
 
   const getMessages = (contact: string) => {
     const contactMessages = messages[contact]
@@ -52,8 +52,10 @@ export const useChat = (url: string) => {
   useEffect(() => {
     const loadConversations = async () => {
       if (!token) return;
+      // TODO catch the errors here
       const resp = await getConversations({token: token})
       setConversations(resp.data)
+      setConversationLoading(false)
     }
 
     chatService.connect(
@@ -226,6 +228,7 @@ export const useChat = (url: string) => {
     sendMessage,
     setMessages,
     addOutGoingMessage,
-    sendMarkReadEvent
+    sendMarkReadEvent,
+    conversationLoading
     };
 };

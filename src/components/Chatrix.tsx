@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import { useChat } from "./UseChat";
+import { useChat, type TextMessage } from "./hook/UseChat";
 import { ChatHeader } from "./Header.Chatrix";
 import { Sidebar } from "./SideBar.Chatrix";
 import { MessagesArea } from "./MessageArea.Chatrix";
 import { InputArea } from "./InputArea.Chatrix";
 import { useAuth } from "./Auth/AuthContex";
 import { getMessageHistory } from "../api/api";
-import type { TextMessage } from "./UseChat";
+
 
 export const Chatrix = () => {
   const { 
@@ -16,41 +16,57 @@ export const Chatrix = () => {
     getMessages, 
     sendMessage, 
     setMessages,
-    sendMarkReadEvent 
+    sendMarkReadEvent,
+    conversationLoading
   } = useChat(`${import.meta.env.VITE_BACKEND_URL}/ws`);
   const {user, token} = useAuth();
   const [textingToId, setTextingToId] = useState<string | null>(null);
   const [inputData, setInputData] = useState('');
-
   const [msgHistoryLoading, setMsgHistoryLoading] = useState<boolean>(true)
-  
+
+
   const textingTo = conversations.find(c => c.user_data.id === textingToId) || null;
-  
   useEffect(() => {
     if(!textingToId || !token || !user) return;
     setMsgHistoryLoading(true)
     
     const fetchChatHistory = async () => {
-      const resp = await getMessageHistory({
-        token: token,
-        with_id: textingToId
-      })
-      const history : TextMessage[] = resp.data?.map((msg) => {
-        return {
-          outgoing: msg.sender_id == user.id,
-          content: msg.content,
-          created_at: msg.created_at,
-          id: msg.id,
-          is_read: msg.is_read,
-          state: msg.is_read ? ( "read") : ("delivered"),
-          temp_id: "",
-        }
-      })
+      try {
+        const resp = await getMessageHistory({
+          token: token,
+          with_id: textingToId
+        })
+        const history : TextMessage[] = resp.data?.map((msg) => {
+          return {
+            outgoing: msg.sender_id == user.id,
+            content: msg.content,
+            created_at: msg.created_at,
+            id: msg.id,
+            is_read: msg.is_read,
+            state: msg.is_read ? ( "read") : ("delivered"),
+            temp_id: "",
+          }
+        })
+  
+        setMessages(prev => ({
+          ...prev, [textingToId]: history
+        }))
+      } catch(e: any) {        
+        // 1. Check if it's a 404 (No history yet)
+        // If you use Axios, it's e.response. If you use native Fetch, it might be different.
+        const status = e.response?.status;
 
-      setMessages(prev => ({
-        ...prev, [textingToId]: history
-      }))
-      setMsgHistoryLoading(false)
+        if (status === 404) {
+          console.log("New conversation! Setting empty array.");          
+          setMessages(prev => ({ ...prev, [textingToId]: [] }));
+        } else {
+          // 2. It's a real error (500, Network Down, etc.)
+          // Maybe show a toast or a small error message in the chat area
+          console.log("Server error or timeout.");
+        }
+      } finally {
+        setMsgHistoryLoading(false)
+      }
     }
 
     fetchChatHistory()
@@ -100,7 +116,8 @@ export const Chatrix = () => {
       <ChatHeader connected={connected} myName={myName} />
       
       <div className="flex-1 flex overflow-hidden">
-        <Sidebar 
+        <Sidebar
+          conversationLoading={conversationLoading}
           conversations={conversations} 
           selectedUser={textingTo}
           onSelectUser={setTextingToId}

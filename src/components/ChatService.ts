@@ -1,5 +1,3 @@
-
-
 export type MessageTypes = { type: "SET_NAME"; message: { name: string; clients: string[] } }
   | { type: "CHAT"; message : { 
       from: string; 

@@ -1,7 +1,7 @@
 import type { ConversationWithUser } from "../api/api";
 import { Message, MessageSkeleton } from "./Message.Chatrix";
 import { useEffect, useRef } from "react";
-import type { TextMessage } from "./UseChat";
+import type { TextMessage } from "./hook/UseChat";
 
 
 export const MessagesArea = ({ 

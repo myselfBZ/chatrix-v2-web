@@ -9,6 +9,12 @@ export type Message = {
     conversation_id:    string;
 }
 
+export type SearchUserResult = {
+    username: string;
+    id: string;
+    last_seen: string
+}
+
 export type ConversationWithUser = {
     user_data: { 
         id : string;
@@ -39,6 +45,17 @@ export const getMessageHistory = ({ token, with_id } : {token: string, with_id:s
         headers: {
             'Authorization': `Bearer ${token}`
         }
+    })
+}
+
+export const searchUser = ({ token, query } : {
+    token: string;
+    query: string;
+}) => {
+    return serverApiInstance.post<SearchUserResult[]>('/authenticated/users/search', { query } ,{
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
     })
 }
 

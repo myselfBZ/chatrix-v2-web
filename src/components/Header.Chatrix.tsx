@@ -22,12 +22,21 @@ export const ChatHeader = ({
         <div>
           <h1 className="text-xl font-bold text-whitet">{myName}</h1>
           <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${
-              connected ? 'bg-green-500 animate-pulse' : 'bg-red-500'
-            }`} />
-            <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
-              {connected ? 'Network Live' : 'Disconnected'}
-            </p>
+            {connected ? (
+              <>
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+                  Network Live
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="w-2 h-2 border border-gray-400 border-t-transparent rounded-full animate-spin" />
+                <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wider">
+                  Connecting
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

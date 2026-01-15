@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { TextMessage } from "./UseChat";
+import type { TextMessage } from "./hook/UseChat";
 import { formatMessageTime, AnimatedClock, CheckIcon, DoubleCheckIcon ,playTickSound, playIncomingSound } from "./MessageUtilts";
 
 

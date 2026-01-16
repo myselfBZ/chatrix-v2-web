@@ -1,5 +1,11 @@
 import { serverApiInstance } from "./axiosInstance";
 
+export type CreateUserPayload = {
+    username: string;
+    email: string;
+    password: string;
+}
+
 export type Message = {
     created_at:         string;
     id:                 string;
@@ -76,6 +82,10 @@ export const createConversation = ({ token, user1, user2 } : {
             "Authorization": `Bearer ${token}`
         }
     })
+}
+
+export const createUser = (params: CreateUserPayload) => {
+    return serverApiInstance.post<LoginResposne>('/auth/users', params)
 }
 
 export const getConversations = ({ token }: {token : string}) => {

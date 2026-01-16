@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { MessageCircle, User, Lock, Mail } from 'lucide-react';
-import { createAccessToken } from '../api/api';
+import { createAccessToken, createUser } from '../api/api';
 import { useAuth } from '../components/Auth/AuthContex';
 import { useNavigate } from 'react-router-dom';
 
@@ -27,6 +27,26 @@ const getErrorMessage = (status: number) => {
 
 const handleSubmit = async () => {
   setError(null); // Reset error before trying
+
+  if(!isLogin && username) {
+    try {
+      const resp = await createUser({
+      email: email,
+      password: password,
+      username: username
+      });
+    
+      login({
+        username: resp.data.user.username,
+        id: resp.data.user.id
+      }, resp.data.access_token);
+      navigate("/home")
+    } catch(err: any) {
+       const status = err.response?.status;
+       setError(getErrorMessage(status));
+    }
+  }
+
   try {
     const resp = await createAccessToken({
       email: email,

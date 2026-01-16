@@ -9,7 +9,7 @@ interface UserListItemProps {
   variant?: 'conversation' | 'search';
   onClick: (id: string | null) => void;
   conversationId: string;
-  onSelectSearchUser: (user: ConversationWithUser | null) => void;
+  onSelectSearchUser: (user: ConversationWithUser) => void;
 }
 
 export const UserListItem = ({
@@ -32,20 +32,10 @@ export const UserListItem = ({
       onClick={
         variant == 'conversation' || conversationId ? (
           () => { 
-            onSelectSearchUser(null)
             onClick(id) 
           }
         ) : (
-          () => { 
-           if(conversationId !== "") {
-            console.log("RIGHT");
-            
-            onClick(id)
-            onSelectSearchUser(null)
-            return;
-           }
-           console.log("WRNG", conversationId);
-           
+          () => {           
           onClick(null)
           onSelectSearchUser({
           user_data: {

@@ -18,7 +18,7 @@ export const Sidebar = ({
   selectedUser: ConversationWithUser | null; 
   onSelectUser: (id: string | null) => void;
   conversationLoading: boolean;
-  onSelectSearchUser: (user: ConversationWithUser | null) => void;
+  onSelectSearchUser: (user: ConversationWithUser) => void;
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);

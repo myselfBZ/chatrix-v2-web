@@ -7,8 +7,9 @@ interface UserListItemProps {
   isSelected?: boolean;
   lastSeen: string;
   variant?: 'conversation' | 'search';
-  onClick: (user: ConversationWithUser) => void;
+  onClick: (id: string | null) => void;
   conversationId: string;
+  onSelectSearchUser: (user: ConversationWithUser | null) => void;
 }
 
 export const UserListItem = ({
@@ -18,8 +19,9 @@ export const UserListItem = ({
   isSelected = false,
   variant = 'conversation',
   onClick,
+  onSelectSearchUser,
   lastSeen,
-  conversationId,
+  conversationId
 }: UserListItemProps) => {
   const gradientColors = variant === 'conversation' 
     ? 'from-green-400 to-blue-500' 
@@ -27,15 +29,35 @@ export const UserListItem = ({
 
   return (
     <button
-      onClick={() => onClick({
-        user_data: {
-          username: username,
-          id: id,
-          last_seen: lastSeen,
-          conversation_id: conversationId,
-        },
-        is_online: isOnline ? (isOnline) : (false)
-      })}
+      onClick={
+        variant == 'conversation' || conversationId ? (
+          () => { 
+            onSelectSearchUser(null)
+            onClick(id) 
+          }
+        ) : (
+          () => { 
+           if(conversationId !== "") {
+            console.log("RIGHT");
+            
+            onClick(id)
+            onSelectSearchUser(null)
+            return;
+           }
+           console.log("WRNG", conversationId);
+           
+          onClick(null)
+          onSelectSearchUser({
+          user_data: {
+              username: username,
+              id: id,
+            last_seen: lastSeen,
+            conversation_id: "",
+          },
+          is_online: isOnline ? (isOnline) : (false)
+          })}
+        )
+      }
       className={`w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-700 transition-colors cursor-pointer ${
         isSelected ? 'bg-gray-700 border-l-4 border-blue-500' : ''
       }`}

@@ -2,7 +2,7 @@ import type { ConversationWithUser } from "../api/api";
 import { Message, MessageSkeleton } from "./Message.Chatrix";
 import { useEffect, useRef } from "react";
 import type { TextMessage } from "./hook/UseChat";
-
+import { TypingIndicator } from "./TypingIndicator";
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   const now = new Date();
@@ -75,11 +75,7 @@ export const MessagesArea = ({
                 </span>
                 
 
-                {selectedUser.is_typing && selectedUser.is_typing === true ? (
-                   <span className="text-[11px] font-medium text-blue-400 animate-pulse">
-                    typing...
-                  </span>
-                ) : selectedUser.is_online ? (
+                { selectedUser.is_online ? (
                   <span className="text-[11px] font-medium text-blue-400">
                     online
                   </span>
@@ -109,6 +105,7 @@ export const MessagesArea = ({
               {messages.map((msg, i) => (
                 <Message key={i} message={msg} isNew={i === messages.length - 1} />
               ))}
+              {selectedUser?.is_typing && <TypingIndicator />}
               <div ref={messagesEndRef} className="h-px" />
             </div>
           )}

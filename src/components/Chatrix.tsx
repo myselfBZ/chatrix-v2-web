@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useChat, type TextMessage } from "./hook/UseChat";
 import { ChatHeader } from "./Header.Chatrix";
 import { Sidebar } from "./SideBar.Chatrix";
@@ -12,7 +12,7 @@ export const Chatrix = () => {
   const { 
     connected, myName, conversations, getMessages, 
     sendMessage, setMessages, sendMarkReadEvent, 
-    conversationLoading, setConversations 
+    conversationLoading, setConversations, sendTyping 
   } = useChat(`${import.meta.env.VITE_BACKEND_URL}/ws`);
   
   const { user, token } = useAuth();
@@ -87,7 +87,7 @@ export const Chatrix = () => {
     const targetId = activeChat.user_data.id;
     let currentConvoId = activeChat.user_data.conversation_id;
 
-    // "Judo Move": If conversation doesn't exist yet, create it first
+
     if (!conversations.some(c => c.user_data.id === targetId)) {
       try {
         const resp = await createConversation({
@@ -97,7 +97,7 @@ export const Chatrix = () => {
         });
         currentConvoId = resp.data.id;
         
-        // Move them from "Search" to "Sidebar"
+
         setConversations(prev => [...prev, {
           ...activeChat,
           user_data: { ...activeChat.user_data, conversation_id: currentConvoId }
@@ -123,6 +123,12 @@ export const Chatrix = () => {
     setTextingToId(user.user_data.id);
   };
 
+
+  const sendTypingEvent = useCallback((isTyping: boolean) => {
+    if (!connected || !textingToId || !user) return;
+    sendTyping(isTyping, textingToId);
+  }, [connected, textingToId, user, sendTyping]);
+
   return (
     <div onKeyDown={(e) => e.key === 'Escape' && onSelectFromSidebar(null)} 
          className="fixed inset-0 bg-gray-900 text-gray-100 flex flex-col">
@@ -144,7 +150,8 @@ export const Chatrix = () => {
               messages={getMessages(activeChat.user_data.id)} 
               selectedUser={activeChat}
             />
-            <InputArea 
+            <InputArea
+              sendTypingEvent={sendTypingEvent} 
               inputData={inputData}
               setInputData={setInputData}
               onSend={handleSend}

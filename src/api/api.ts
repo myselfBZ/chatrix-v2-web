@@ -36,6 +36,8 @@ export type ConversationWithUser = {
         conversation_id: string
     };
     is_online: boolean;
+
+    is_typing? : boolean;
 }
 
 export type LoginResposne = {

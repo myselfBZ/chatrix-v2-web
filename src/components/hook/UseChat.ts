@@ -3,6 +3,7 @@ import { chatService } from '../ChatService';
 import { useAuth } from '../Auth/AuthContex';
 import { getConversations, type ConversationWithUser } from '../../api/api';
 
+
 type MessageStore = Record<string, TextMessage[]>;
 
 export type TextMessage = {
@@ -77,15 +78,47 @@ export const useChat = (url: string) => {
             content: data.message.content,
             created_at: data.message.created_at,
             id: data.message.id,
-            // no uuids for incoming messages
             temp_id: "",
-            // later okay?
             is_read: false,
           })
           break;
+        
+        case "STOPPED_TYPING":  
+                  
+          setConversations((prev) => {
+            return prev.map((conv) => {
+              if (conv.user_data.id === data.message.from) {
+                return {
+                  ...conv,
+                  is_typing: false,
+                  user_data: {
+                    ...conv.user_data,
+                  }
+                };
+              }
+              return conv;
+            });
+          });
+          break;
+        case "TYPING":
+          
+          setConversations((prev) => {
+            return prev.map((conv) => {
+              if (conv.user_data.id === data.message.from && conv.is_online) {
+                return {
+                  ...conv,
+                  is_typing: true,
+                  user_data: {
+                    ...conv.user_data,
+                  }
+                };
+              }
+              return conv;
+            });
+          });
+          break;
         case "ONLINE_PRESENCE":
           setConversations((prev) => {
-            // Use .map to create a brand new array reference
             return prev.map((conv) => {
               if (conv.user_data.id === data.message.user_id) {
                 return {
@@ -108,6 +141,7 @@ export const useChat = (url: string) => {
                 return {
                   ...conv,
                   is_online: false, 
+                  is_typing: false,
                   user_data: {
                     ...conv.user_data,
                     last_seen: data.message.last_seen
@@ -193,6 +227,14 @@ export const useChat = (url: string) => {
     };
   }, [url]);
 
+  const sendTyping = (isTyping: boolean ,to: string) => {
+    if(!user) return;
+    chatService.send(isTyping ? "TYPING" : "STOPPED_TYPING", {
+      to: to,
+      from: user.id
+    })
+  }
+
   const sendMessage = useCallback((to: string, from: string, content: string) => {
     const temp_id = crypto.randomUUID()
     
@@ -231,6 +273,7 @@ export const useChat = (url: string) => {
     addOutGoingMessage,
     sendMarkReadEvent,
     conversationLoading,
-    setConversations
+    setConversations,
+    sendTyping
     };
 };

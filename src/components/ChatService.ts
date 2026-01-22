@@ -20,6 +20,16 @@ export type MessageTypes = { type: "SET_NAME"; message: { name: string; clients:
   } }
   | { type: "MSG_READ", message: { conversation_id: string, message_ids: string[] } }
   | { type: "CONVO_CREATED", message: ConversationWithUser }
+  | { type: "TYPING", message: {
+      from: string;
+      to:   string;
+    }}
+  | {
+      type: "STOPPED_TYPING", message: {
+        from: string;
+        to: string;
+      } 
+    }
 
 
 export type MessageCallback = (data: MessageTypes) => void;

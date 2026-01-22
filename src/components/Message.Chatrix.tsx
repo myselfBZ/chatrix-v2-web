@@ -1,18 +1,23 @@
 import { useEffect, useRef } from "react";
 import type { TextMessage } from "./hook/UseChat";
-import { formatMessageTime, AnimatedClock, CheckIcon, DoubleCheckIcon ,playTickSound, playIncomingSound } from "./MessageUtilts";
-
-
+import { 
+  formatMessageTime, 
+  AnimatedClock, 
+  CheckIcon, 
+  DoubleCheckIcon, 
+  playTickSound, 
+  playIncomingSound 
+} from "./MessageUtilts";
 
 export const Message = ({ message, isNew }: { message: TextMessage; isNew?: boolean }) => {
   const isOutgoing = message.outgoing;
   const isPending = message.state === 'pending';
   const isDelivered = message.state === 'delivered';
-  const isRead  = message.state == 'read';
+  const isRead = message.state === 'read';
   const prevStateRef = useRef(message.state);
   const hasPlayedIncomingSound = useRef(false);
 
-  // Play sound when message is delivered
+  // Sound logic for status changes
   useEffect(() => {
     if (prevStateRef.current === 'pending' && message.state === 'delivered') {
       playTickSound();
@@ -20,7 +25,7 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
     prevStateRef.current = message.state;
   }, [message.state]);
 
-  // Play sound for new incoming messages
+  // Sound logic for new incoming messages
   useEffect(() => {
     if (isNew && !isOutgoing && !hasPlayedIncomingSound.current) {
       playIncomingSound();
@@ -30,7 +35,12 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
 
   return (
     <div className={`flex w-full ${isOutgoing ? 'justify-end' : 'justify-start'} mb-2 ${isNew ? 'animate-slideUp' : 'animate-fadeIn'}`}>
-      <div className={`max-w-[35ch] flex flex-col ${isOutgoing ? 'items-end' : 'items-start'}`}>
+      
+      {/* 1. The Container: max-w ensures it doesn't hit the screen edge.
+          2. min-w-0 is the MAGIC here. It forces flex children to respect max-width 
+             even if they contain a single long word like "aaaaaa...".
+      */}
+      <div className={`max-w-[85%] sm:max-w-[70%] min-w-0 flex flex-col ${isOutgoing ? 'items-end' : 'items-start'}`}>
         
         {/* Message Bubble Container */}
         <div className={`relative rounded-2xl px-3 py-1.5 shadow-sm ${
@@ -39,32 +49,44 @@ export const Message = ({ message, isNew }: { message: TextMessage; isNew?: bool
             : 'bg-gray-800 text-gray-100 rounded-bl-sm'
         }`}>
           
-          {/* Content with inline timestamp */}
-         <p className="text-[15px] leading-relaxed text-left break-words whitespace-pre-wrap inline">
-            {message.content}
-            <span className={`text-[10px] ml-2 select-none inline-block align-bottom ${
+          {/* Using flex-wrap + justify-end allows the timestamp to 
+              sit nicely at the end of the text.
+          */}
+          <div className="flex flex-wrap justify-end items-end gap-x-2 min-w-0">
+            
+            {/* The Content:
+                - break-all: Forces the line to break exactly where the container ends.
+                - whitespace-pre-wrap: Keeps the Shift+Enter newlines.
+            */}
+            <p className="text-[15px] leading-relaxed text-left break-all whitespace-pre-wrap flex-1 min-w-0">
+              {message.content}
+            </p>
+
+            {/* Timestamp & Status Icons */}
+            <div className={`flex items-center gap-1 text-[10px] select-none h-4 mb-[2px] flex-shrink-0 ${
               isOutgoing ? 'text-blue-100/80' : 'text-gray-400'
             }`}>
               {isPending ? (
-                <AnimatedClock className={isOutgoing ? 'text-blue-100/80' : 'text-gray-400'} />
+                <AnimatedClock className="w-3 h-3" />
               ) : (
                 <>
                   {formatMessageTime(message.created_at)}
-                  {isRead && isOutgoing ?  (
-                    <DoubleCheckIcon className={`ml-1 ${isOutgoing ? 'text-blue-200' : 'text-gray-400'}`} />
-                  ) : isDelivered && isOutgoing ? (
-                    <CheckIcon className={`ml-1 ${isOutgoing ? 'text-blue-100/80' : 'text-gray-400'}`} />
-                  ) : null}
+                  {isOutgoing && (
+                    isRead ? (
+                      <DoubleCheckIcon className="text-blue-200" />
+                    ) : isDelivered ? (
+                      <CheckIcon className="text-blue-100/80" />
+                    ) : null
+                  )}
                 </>
               )}
-            </span>
-          </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 };
-
 export const MessageSkeleton = () => {
   return (
     <div className="flex flex-col gap-6 animate-pulse w-full">

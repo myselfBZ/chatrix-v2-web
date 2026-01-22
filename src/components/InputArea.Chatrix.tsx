@@ -1,5 +1,6 @@
-import { Send } from "lucide-react";
-import {  useRef, useEffect } from "react";
+import { Send, Smile } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
+import EmojiPicker, { type EmojiClickData, Theme } from 'emoji-picker-react';
 import { useTyping } from "./hook/UseTyping";
 
 export const InputArea = ({ 
@@ -16,8 +17,10 @@ export const InputArea = ({
   sendTypingEvent: (typing: boolean) => void;  
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  useTyping(inputData, sendTypingEvent)
+  useTyping(inputData, sendTypingEvent);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -27,19 +30,54 @@ export const InputArea = ({
     }
   }, [inputData]);
 
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (!disabled && inputData.trim()) {
         setInputData(inputData.trim());
-        // Use setTimeout to ensure state updates before sending
         setTimeout(() => onSend(), 0);
       }
     }
   };
+
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const cursorPosition = textarea.selectionStart;
+      const textBefore = inputData.substring(0, cursorPosition);
+      const textAfter = inputData.substring(cursorPosition);
+      const newText = textBefore + emojiData.emoji + textAfter;
+      
+      setInputData(newText);
+      
+      // Set cursor position after emoji
+      setTimeout(() => {
+        textarea.selectionStart = textarea.selectionEnd = cursorPosition + emojiData.emoji.length;
+        textarea.focus();
+      }, 0);
+    }
+  };
+
   return (
     <div className="bg-gray-800 border-t border-gray-700 px-4 py-3 sm:px-6">
-      <div className="flex items-end gap-3 max-w-6xl mx-auto">
+      <div className="flex items-end gap-3 max-w-6xl mx-auto relative">
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -50,13 +88,23 @@ export const InputArea = ({
             placeholder="Type a message..."
             disabled={disabled}
             className={`
-              w-full px-4 py-3 bg-gray-700 text-gray-100 rounded-2xl border border-gray-600 
+              w-full px-4 py-3 pr-12 bg-gray-700 text-gray-100 rounded-2xl border border-gray-600 
               focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500
               disabled:opacity-50 transition-all resize-none overflow-y-auto
               scrollbar-thin scrollbar-thumb-gray-600
             `}
             style={{ minHeight: '46px', maxHeight: '200px' }}
           />
+          
+          {/* Emoji button inside textarea */}
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="absolute right-3 bottom-3 text-gray-400 hover:text-blue-400 transition-colors"
+            disabled={disabled}
+          >
+            <Smile size={20} />
+          </button>
         </div>
 
         <button
@@ -71,6 +119,25 @@ export const InputArea = ({
         >
           <Send size={18} className="text-white transform translate-x-0.5" />
         </button>
+
+        {/* Emoji Picker */}
+        {showEmojiPicker && (
+          <div 
+            ref={emojiPickerRef}
+            className="absolute bottom-16 right-0 z-50"
+          >
+            <EmojiPicker
+              onEmojiClick={handleEmojiClick}
+              theme={Theme.DARK}
+              height={400}
+              width={350}
+              searchPlaceHolder="Search emoji..."
+              previewConfig={{
+                showPreview: false
+              }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

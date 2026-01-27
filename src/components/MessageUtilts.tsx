@@ -6,28 +6,31 @@ export const formatMessageTime = (dateString: string) => {
 
 export const playIncomingSound = () => {
   const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-  
-  // Create two oscillators for a pleasant "ding" sound
-  const osc1 = audioContext.createOscillator();
-  const osc2 = audioContext.createOscillator();
-  const gainNode = audioContext.createGain();
-  
-  osc1.connect(gainNode);
-  osc2.connect(gainNode);
-  gainNode.connect(audioContext.destination);
-  
-  // Two-tone notification sound
-  osc1.frequency.setValueAtTime(800, audioContext.currentTime);
-  osc2.frequency.setValueAtTime(1000, audioContext.currentTime);
-  
-  // Fade out
-  gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-  
-  osc1.start(audioContext.currentTime);
-  osc2.start(audioContext.currentTime);
-  osc1.stop(audioContext.currentTime + 0.3);
-  osc2.stop(audioContext.currentTime + 0.3);
+  const now = audioContext.currentTime;
+
+  const playTone = (freq: number, volume: number, duration: number) => {
+    const osc = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+
+    // Envelope: Fast attack to avoid "clicks", fast decay for "soothing"
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(volume, now + 0.02); 
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    osc.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    osc.start(now);
+    osc.stop(now + duration);
+  };
+
+  // Layering two high, clean notes (Perfect 5th interval)
+  // This creates a bright "sparkle" rather than a deep "thud"
+  playTone(880, 0.1, 0.5); // A5
+  playTone(1320, 0.05, 0.3); // E6 (lighter, shorter)
 };
 
 export const playTickSound = () => {
